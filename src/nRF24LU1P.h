@@ -151,6 +151,10 @@ enum RF_SETUP
   RF_PWR_1  = 0x00,
 };
 
+// various register bitmasks
+#define MASK_RF_DR_LOW  0b00100000
+#define MASK_RF_DR_HIGH 0b00001000
+
 // Dynamic payloads
 enum DYNPD
 {

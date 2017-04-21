@@ -45,6 +45,8 @@ ENABLE_LNA_PA                  = 0x0B
 TRANSMIT_PAYLOAD_GENERIC       = 0x0C
 ENTER_PROMISCUOUS_MODE_GENERIC = 0x0D
 RECEIVE_PAYLOAD                = 0x12
+SET_DATA_RATE                  = 0x20
+GET_DATA_RATE                  = 0x21
 
 # nRF24LU1+ registers
 RF_CH = 0x05
@@ -53,6 +55,7 @@ RF_CH = 0x05
 RF_RATE_250K = 0
 RF_RATE_1M   = 1
 RF_RATE_2M   = 2
+RF_RATES = ["RF_RATE_250K", "RF_RATE_1M", "RF_RATE_2M"]
 
 # nRF24LU1+ radio dongle
 class nrf24:
@@ -136,6 +139,16 @@ class nrf24:
   # Get the current RF channel
   def get_channel(self):
     self.send_usb_command(GET_CHANNEL, [])
+    return self.dongle.read(0x81, 64, timeout=nrf24.usb_timeout)
+
+  # set the RF data rate
+  def set_data_rate(self, rate):
+    self.send_usb_command(SET_DATA_RATE, [rate])
+    self.dongle.read(0x81, 64, timeout=nrf24.usb_timeout)
+
+  # set the RF data rate
+  def get_data_rate(self):
+    self.send_usb_command(GET_DATA_RATE, [])
     return self.dongle.read(0x81, 64, timeout=nrf24.usb_timeout)
 
   # Enable the LNA (CrazyRadio PA)

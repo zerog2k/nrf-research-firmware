@@ -216,10 +216,64 @@ void handle_radio_request(uint8_t request, uint8_t * data)
     return;
   }
 
+  // set the rf data rate
+  else if(request == SET_DATA_RATE)
+  {
+    uint8_t rf_data_rate;
+    switch (data[0])
+    {
+      case 0:
+        rf_data_rate = RATE_250K;
+        break;
+      case 1:
+        rf_data_rate = RATE_1M;
+        break;
+      case 2:
+      default:
+        rf_data_rate = RATE_2M;
+        break;
+    }
+    rfce = 0;
+    write_register_byte(RF_SETUP, rf_data_rate);
+    in1bc = 1;
+    in1buf[0] = data[0];
+    flush_rx();
+    flush_tx();
+    rfce = 1;
+    return;    
+  }
+
   // Get the current channel
   else if(request == GET_CHANNEL)
   {
     spi_read(RF_CH, in1buf, 1);
+    in1bc = 1;
+    return;
+  }
+
+  // Get the current rd data rate
+  else if(request == GET_DATA_RATE)
+  {
+    uint8_t rf_setup, buf;
+
+    spi_read(RF_SETUP, &rf_setup, 1);
+
+    switch (rf_setup & (MASK_RF_DR_LOW | MASK_RF_DR_HIGH))
+    {
+      case RATE_250K:
+        in1buf[0] = 0;
+        break;
+      case RATE_1M:
+        in1buf[0] = 1;
+        break;
+      case RATE_2M:
+      default:
+        in1buf[0] = 2;
+        break;
+    }
+
+    //buf = rf_setup & (MASK_RF_DR_LOW | MASK_RF_DR_HIGH);
+    //in1buf[0] = buf;
     in1bc = 1;
     return;
   }

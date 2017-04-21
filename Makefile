@@ -1,5 +1,5 @@
 SDCC ?= sdcc
-CFLAGS = --model-large --std-c99
+CFLAGS = --model-large --std-sdcc99
 LDFLAGS = --xram-loc 0x8000 --xram-size 2048 --model-large
 VPATH = src/
 OBJS = main.rel usb.rel usb_desc.rel radio.rel

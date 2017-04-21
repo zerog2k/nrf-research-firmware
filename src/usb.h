@@ -75,6 +75,8 @@ enum usb_request_type_t
 #define TRANSMIT_PAYLOAD_GENERIC       0x0C
 #define ENTER_PROMISCUOUS_MODE_GENERIC 0x0D
 #define RECEIVE_PACKET                 0x12
+#define SET_DATA_RATE                  0x20
+#define GET_DATA_RATE                  0x21
 #define LAUNCH_LOGITECH_BOOTLOADER     0xFE
 #define LAUNCH_NORDIC_BOOTLOADER       0xFF
 
