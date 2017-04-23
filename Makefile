@@ -1,8 +1,14 @@
 SDCC ?= sdcc
-CFLAGS = --model-large --std-sdcc99
+FLASH_SIZE_16K ?= 0
+ifeq ($(FLASH_SIZE_16K), 1)
+    CFLAGS = --model-large --std-sdcc99 -DFLASH_SIZE_16K
+else
+    CFLAGS = --model-large --std-sdcc99
+endif
 LDFLAGS = --xram-loc 0x8000 --xram-size 2048 --model-large
 VPATH = src/
 OBJS = main.rel usb.rel usb_desc.rel radio.rel
+
 
 SDCC_VER := $(shell $(SDCC) -v | grep -Po "\d\.\d\.\d" | sed "s/\.//g")
 
@@ -13,9 +19,14 @@ sdcc:
 
 dongle.bin: $(OBJS)
 	$(SDCC) $(LDFLAGS) $(OBJS:%=bin/%) -o bin/dongle.ihx
+ifeq (, $(shell which objcopy))
+	# objcopy not available, using makebin (only works for nordic bootloader)
+	makebin -p bin/dongle.ihx bin/dongle.bin
+else
 	objcopy -I ihex bin/dongle.ihx -O binary bin/dongle.bin
 	objcopy --pad-to 26622 --gap-fill 255 -I ihex bin/dongle.ihx -O binary bin/dongle.formatted.bin
 	objcopy -I binary bin/dongle.formatted.bin -O ihex bin/dongle.formatted.ihx
+endif
 
 %.rel: %.c
 	$(SDCC) $(CFLAGS) -c $< -o bin/$@
