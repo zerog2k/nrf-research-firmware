@@ -80,6 +80,7 @@ enum usb_request_type_t
 #define ENABLE_LNA                     0x0B
 #define TRANSMIT_PAYLOAD_GENERIC       0x0C
 #define ENTER_PROMISCUOUS_MODE_GENERIC 0x0D
+#define ENTER_NORMAL_MODE              0x0E
 #define RECEIVE_PACKET                 0x12
 #define SET_DATA_RATE                  0x20
 #define GET_DATA_RATE                  0x21

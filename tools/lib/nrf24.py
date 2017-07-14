@@ -44,6 +44,7 @@ GET_CHANNEL                    = 0x0A
 ENABLE_LNA_PA                  = 0x0B
 TRANSMIT_PAYLOAD_GENERIC       = 0x0C
 ENTER_PROMISCUOUS_MODE_GENERIC = 0x0D
+ENTER_NORMAL_MODE              = 0x0E
 RECEIVE_PAYLOAD                = 0x12
 SET_DATA_RATE                  = 0x20
 GET_DATA_RATE                  = 0x21
@@ -92,6 +93,16 @@ class nrf24:
           format(':'.join('{:02X}'.format(ord(b)) for b in prefix)))
     else:
       logging.debug('Entered promiscuous mode')
+
+  # Put the radio in "normal" mode with CRC16 checking
+  def enter_normal_mode(self, prefix=[], rate=RF_RATE_2M, payload_length=32):
+    self.send_usb_command(ENTER_NORMAL_MODE, [len(prefix), rate, payload_length]+map(ord, prefix))
+    self.dongle.read(0x81, 64, timeout=nrf24.usb_timeout)
+    if len(prefix) > 0:
+      logging.debug('Entered normal mode with address prefix {0}'.
+          format(':'.join('{:02X}'.format(ord(b)) for b in prefix)))
+    else:
+      logging.debug('Entered normal mode')
 
   # Put the radio in ESB "sniffer" mode (ESB mode w/o auto-acking)
   def enter_sniffer_mode(self, address):

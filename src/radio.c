@@ -90,6 +90,51 @@ void enter_promiscuous_mode_generic(uint8_t * prefix, uint8_t prefix_length, uin
   in1bc = 0;
 }
 
+// Enter normal mode
+void enter_normal_mode(uint8_t * prefix, uint8_t prefix_length, uint8_t rate, uint8_t payload_length)
+{
+  // Update state
+  int x;
+  for(x = 0; x < prefix_length; x++) pm_prefix[prefix_length - 1 - x] = prefix[x];
+  pm_prefix_length = prefix_length > 5 ? 5 : prefix_length;
+  radio_mode = promiscuous_generic;
+  pm_payload_length = payload_length;
+
+  // CE low
+  rfce = 0;
+
+  // Enable RX pipe 0
+  write_register_byte(EN_RXADDR, ENRX_P0);
+
+  // Set the default RX address
+  if(pm_prefix_length == 0) configure_address(promiscuous_address, 2);
+
+  // Set the RX address to a single prefix byte and a premable byte
+  else if(pm_prefix_length == 1)
+  {
+    uint8_t address[2] = { pm_prefix[0], (pm_prefix[0] & 0x80) == 0x80 ? 0xAA : 0x55 };
+    configure_address(address, 2);
+  }
+
+  // If the prefix is two or more bytes, set it as the address
+  else configure_address(pm_prefix, pm_prefix_length);
+
+  // Disable dynamic payload length and automatic ACK handling
+  configure_mac(0, 0, ENAA_P0);
+
+  // CRC16, enable RX, specified data rate, and pm_payload_length byte payload width
+  switch(rate)
+  {
+    case 0:  configure_phy(PRIM_RX | EN_CRC | CRC0 | PWR_UP, RF_PWR_4 | RATE_250K, pm_payload_length); break;
+    case 1:  configure_phy(PRIM_RX | EN_CRC | CRC0 | PWR_UP, RF_PWR_4 | RATE_1M, pm_payload_length); break;
+    default: configure_phy(PRIM_RX | EN_CRC | CRC0 | PWR_UP, RF_PWR_4 | RATE_2M, pm_payload_length); break;
+  }
+
+  // CE high
+  rfce = 1;
+  in1bc = 0;
+}
+
 // Configure addressing on pipe 0
 void configure_address(uint8_t * address, uint8_t length)
 {
@@ -288,6 +333,12 @@ void handle_radio_request(uint8_t request, uint8_t * data)
   else if(request == ENTER_PROMISCUOUS_MODE_GENERIC)
   {
     enter_promiscuous_mode_generic(&data[3] /* address prefix */, data[0] /* prefix length */, data[1] /* rate */, data[2] /* payload length */);
+  }
+
+  // Enter generic promiscuous mode
+  else if(request == ENTER_NORMAL_MODE)
+  {
+    enter_normal_mode(&data[3] /* address prefix */, data[0] /* prefix length */, data[1] /* rate */, data[2] /* payload length */);
   }
 
   // Enter continuous tone test mode
