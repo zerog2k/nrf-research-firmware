@@ -26,6 +26,8 @@ import binascii
 common.init_args('./nrf24-listener.py')
 common.parser.add_argument('-p', '--prefix', type=str, help='Promiscuous mode address prefix', default='')
 common.parser.add_argument('-d', '--dwell', type=float, help='Dwell time per channel, in milliseconds', default='100')
+common.parser.add_argument('-r', '--rate', choices=["RF_RATE_250K", "RF_RATE_1M", "RF_RATE_2M"], default="RF_RATE_1M")
+common.parser.add_argument('--payload-length', help="static payload length: 1-32, dynamic: 0", type=int, choices=range(32), default=0)
 common.parse_and_init()
 
 # Parse the prefix addresses
@@ -33,8 +35,9 @@ prefix_address = common.args.prefix.replace(':', '').decode('hex')
 if len(prefix_address) > 5:
   raise Exception('Invalid prefix address: {0}'.format(args.address))
 
-# Put the radio in promiscuous mode
-common.radio.enter_normal_mode(prefix_address, rate=nrf24.RF_RATE_1M, payload_length=32)
+# Put the radio in normal mode
+common.radio.enter_normal_mode(prefix_address, rate=nrf24.RF_RATES.index(common.args.rate),
+   payload_length=common.args.payload_length)
 
 # Convert dwell time from milliseconds to seconds
 dwell_time = common.args.dwell / 1000

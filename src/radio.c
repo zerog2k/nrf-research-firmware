@@ -95,10 +95,19 @@ void enter_normal_mode(uint8_t * prefix, uint8_t prefix_length, uint8_t rate, ui
 {
   // Update state
   int x;
-  for(x = 0; x < prefix_length; x++) pm_prefix[prefix_length - 1 - x] = prefix[x];
+  bool enable_dpl = 0;
+  for (x = 0; x < prefix_length; x++) 
+    pm_prefix[prefix_length - 1 - x] = prefix[x];
   pm_prefix_length = prefix_length > 5 ? 5 : prefix_length;
-  radio_mode = promiscuous_generic;
-  pm_payload_length = payload_length;
+  radio_mode = normal;
+  if (payload_length > 0)
+    pm_payload_length = payload_length;
+
+  else
+  {
+    pm_payload_length = 32;
+    enable_dpl = 1;
+  }
 
   // CE low
   rfce = 0;
@@ -107,10 +116,11 @@ void enter_normal_mode(uint8_t * prefix, uint8_t prefix_length, uint8_t rate, ui
   write_register_byte(EN_RXADDR, ENRX_P0);
 
   // Set the default RX address
-  if(pm_prefix_length == 0) configure_address(promiscuous_address, 2);
-
+  if (pm_prefix_length == 0) 
+    configure_address(promiscuous_address, 2);
+  
   // Set the RX address to a single prefix byte and a premable byte
-  else if(pm_prefix_length == 1)
+  else if (pm_prefix_length == 1)
   {
     uint8_t address[2] = { pm_prefix[0], (pm_prefix[0] & 0x80) == 0x80 ? 0xAA : 0x55 };
     configure_address(address, 2);
@@ -120,7 +130,10 @@ void enter_normal_mode(uint8_t * prefix, uint8_t prefix_length, uint8_t rate, ui
   else configure_address(pm_prefix, pm_prefix_length);
 
   // Disable dynamic payload length and automatic ACK handling
-  configure_mac(0, 0, ENAA_P0);
+  if (enable_dpl)
+    configure_mac(EN_DPL, DPL_P0, ENAA_P0);
+  else
+    configure_mac(0, 0, ENAA_P0);
 
   // CRC16, enable RX, specified data rate, and pm_payload_length byte payload width
   switch(rate)
@@ -463,6 +476,26 @@ void handle_radio_request(uint8_t request, uint8_t * data)
         // flush_rx();
         return;
       }
+
+      // normal mode
+      else if(radio_mode == normal)
+      {
+        int x;
+        uint8_t payload[37];
+
+        // Get the payload width
+        read_register(R_RX_PL_WID, &pm_payload_length, 1);
+        
+        // Read in the payload, concatenated to the address prefix
+        for(x = 0; x < pm_prefix_length; x++) payload[pm_prefix_length - x - 1] = pm_prefix[x];
+        read_register(R_RX_PAYLOAD, &payload[pm_prefix_length], pm_payload_length);
+
+        // Write the payload to the output buffer
+        memcpy(in1buf, payload, pm_prefix_length + pm_payload_length);
+        in1bc = pm_prefix_length + pm_payload_length;
+        // flush_rx();
+        return;
+      }      
     }
 
     // No payload

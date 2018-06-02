@@ -108,6 +108,9 @@ enum radio_mode_t
 
   // Generic promiscuous mode
   promiscuous_generic = 2,
+
+  // "normal" mode for rx
+  normal = 3
 };
 
 // Radio mode
