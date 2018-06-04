@@ -27,7 +27,7 @@ common.init_args('./nrf24-listener.py')
 common.parser.add_argument('-p', '--prefix', type=str, help='Promiscuous mode address prefix', default='')
 common.parser.add_argument('-d', '--dwell', type=float, help='Dwell time per channel, in milliseconds', default='100')
 common.parser.add_argument('-r', '--rate', choices=["RF_RATE_250K", "RF_RATE_1M", "RF_RATE_2M"], default="RF_RATE_1M")
-common.parser.add_argument('--payload-length', help="static payload length: 1-32, dynamic: 0", type=int, choices=range(32), default=0)
+common.parser.add_argument('--payload-length', help="static payload length: 1-32, dynamic: 0", type=int, choices=range(33), default=0)
 common.parse_and_init()
 
 # Parse the prefix addresses

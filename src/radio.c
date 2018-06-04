@@ -133,7 +133,7 @@ void enter_normal_mode(uint8_t * prefix, uint8_t prefix_length, uint8_t rate, ui
   if (enable_dpl)
     configure_mac(EN_DPL, DPL_P0, ENAA_P0);
   else
-    configure_mac(0, 0, ENAA_P0);
+    configure_mac(0, 0, ENAA_NONE);
 
   // CRC16, enable RX, specified data rate, and pm_payload_length byte payload width
   switch(rate)
@@ -146,6 +146,17 @@ void enter_normal_mode(uint8_t * prefix, uint8_t prefix_length, uint8_t rate, ui
   // CE high
   rfce = 1;
   in1bc = 0;
+}
+
+bool is_esb_enabled() 
+{
+
+  if ((read_register_byte(FEATURE) & EN_DPL) && 
+      (read_register_byte(DYNPD) & DPL_P0) && 
+      (read_register_byte(EN_AA) & ENAA_P0))
+    return true;
+  else
+    return false;
 }
 
 // Configure addressing on pipe 0
@@ -483,17 +494,19 @@ void handle_radio_request(uint8_t request, uint8_t * data)
         int x;
         uint8_t payload[37];
 
-        // Get the payload width
-        read_register(R_RX_PL_WID, &pm_payload_length, 1);
+        if (is_esb_enabled())
+          // Get the payload width
+          pm_payload_length = read_register_byte(R_RX_PL_WID);
         
         // Read in the payload, concatenated to the address prefix
-        for(x = 0; x < pm_prefix_length; x++) payload[pm_prefix_length - x - 1] = pm_prefix[x];
+        for(x = 0; x < pm_prefix_length; x++)
+          payload[pm_prefix_length - x - 1] = pm_prefix[x];
         read_register(R_RX_PAYLOAD, &payload[pm_prefix_length], pm_payload_length);
 
         // Write the payload to the output buffer
         memcpy(in1buf, payload, pm_prefix_length + pm_payload_length);
         in1bc = pm_prefix_length + pm_payload_length;
-        // flush_rx();
+        //flush_rx();
         return;
       }      
     }

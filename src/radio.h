@@ -30,6 +30,10 @@ void enter_promiscuous_mode(uint8_t * prefix, uint8_t prefix_length);
 //   rate:          data rate (0=250K, 1=1M, 2=2M)
 void enter_promiscuous_mode_generic(uint8_t * prefix, uint8_t prefix_length, uint8_t rate, uint8_t payload_length);
 
+void enter_normal_mode(uint8_t * prefix, uint8_t prefix_length, uint8_t rate, uint8_t payload_length);
+
+bool is_esb_enabled();
+
 // Configure addressing on pipe 0
 //   address: address bytes
 //   length:  address length

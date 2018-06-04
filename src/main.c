@@ -25,7 +25,7 @@ void main()
   rfcon = 0x06; // enable RF clock
   rfctl = 0x10; // enable SPI
   ien0 = 0x80;  // enable interrupts
-  TICKDV = 0xFF; // set the tick divider
+  //TICKDV = 0xFF; // set the tick divider
 
   // Initialise and connect the USB controller
   init_usb();
@@ -37,6 +37,7 @@ void main()
   // Everything is triggered via interrupts, so now we wait
   while(1)
   {
+    // service watchdog
     REGXH = 0xFF;
     REGXL = 0xFF;
     REGXC = 0x08;
